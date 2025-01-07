@@ -24,6 +24,14 @@ func connectToPostgreSQL() (*gorm.DB, error) {
 	return db, nil
 }
 
+func InitializeMigration(db *gorm.DB) error {
+	return db.AutoMigrate(
+		&models.User{},
+		&models.UserBook{},
+		&models.ReadingActivity{},
+	)
+}
+
 func main() {
 	db, err := connectToPostgreSQL()
 	if err != nil {
@@ -35,7 +43,7 @@ func main() {
 	}
 	defer sqlDB.Close()
 
-	err = db.AutoMigrate(&models.User{})
+	err = InitializeMigration(db)
 	if err != nil {
 		log.Fatal(err)
 	}

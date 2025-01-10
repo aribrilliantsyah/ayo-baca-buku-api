@@ -1,4 +1,126 @@
+basePath: /
+definitions:
+  ayo-baca-buku_app_models.ReadingActivity:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      end_page:
+        type: integer
+      id:
+        type: integer
+      notes:
+        type: string
+      pages_read:
+        type: integer
+      reading_date:
+        type: string
+      start_page:
+        type: integer
+      updated_at:
+        type: string
+      user_book:
+        $ref: '#/definitions/ayo-baca-buku_app_models.UserBook'
+      user_book_id:
+        type: integer
+    type: object
+  ayo-baca-buku_app_models.User:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      token:
+        type: string
+      updated_at:
+        type: string
+      user_books:
+        items:
+          $ref: '#/definitions/ayo-baca-buku_app_models.UserBook'
+        type: array
+      username:
+        type: string
+    type: object
+  ayo-baca-buku_app_models.UserBook:
+    properties:
+      author:
+        type: string
+      cover:
+        description: URL atau path ke gambar cover
+        type: string
+      created_at:
+        type: string
+      current_page:
+        type: integer
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      end_date:
+        type: string
+      id:
+        type: integer
+      motivation_read:
+        type: string
+      publisher:
+        type: string
+      reading_activities:
+        items:
+          $ref: '#/definitions/ayo-baca-buku_app_models.ReadingActivity'
+        type: array
+      start_date:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+      total_pages:
+        type: integer
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/ayo-baca-buku_app_models.User'
+      user_id:
+        type: integer
+    type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+host: localhost:3000
 info:
-  contact: {}
-paths: {}
+  contact:
+    email: fiber@swagger.io
+    name: API Support
+  description: Ini adalah API - Ayo Baca Buku
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Ayo Baca Buku - API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ayo-baca-buku_app_models.User'
+      summary: Get all users
+      tags:
+      - User
 swagger: "2.0"

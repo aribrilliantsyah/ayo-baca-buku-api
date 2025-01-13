@@ -26,6 +26,7 @@ func main() {
 	}
 
 	database.RunMigration(DB)
+	database.RunSeeder(DB)
 
 	app := fiber.New()
 	app.Static("/docs", "docs")

@@ -2,6 +2,7 @@ package database
 
 import (
 	"ayo-baca-buku/app/config"
+	"ayo-baca-buku/app/database/seeders"
 	"ayo-baca-buku/app/models"
 	"fmt"
 	"log"
@@ -37,4 +38,9 @@ func RunMigration(DB *gorm.DB) {
 	}
 
 	fmt.Println("Migrated Successfully")
+}
+
+func RunSeeder(DB *gorm.DB) {
+	seeders.SeedUser(DB)
+	fmt.Println("Seeder Successfully")
 }

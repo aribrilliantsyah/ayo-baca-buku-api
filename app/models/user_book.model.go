@@ -18,7 +18,7 @@ type UserBook struct {
 	MotivationRead    string            `json:"motivation_read" gorm:"type:text"`
 	Status            string            `json:"status" gorm:"type:varchar(20);check:status IN ('reading', 'finished');default:'reading'"`
 	StartDate         time.Time         `json:"start_date" gorm:"not null"`
-	EndDate           *time.Time        `json:"end_date"`
+	EndDate           time.Time         `json:"end_date"`
 	ReadingActivities []ReadingActivity `json:"reading_activities" gorm:"foreignKey:UserBookID"`
 	User              User              `json:"user" gorm:"foreignKey:UserID"`
 	CreatedAt         time.Time         `json:"created_at"`

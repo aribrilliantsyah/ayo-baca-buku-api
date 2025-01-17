@@ -5,9 +5,14 @@ import (
 	"ayo-baca-buku/app/routes"
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/gofiber/contrib/fiberzap/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // @title Ayo Baca Buku - API
@@ -29,6 +34,26 @@ func main() {
 	database.RunSeeder(DB)
 
 	app := fiber.New()
+
+	logFile := &lumberjack.Logger{
+		Filename:   "logs/app-" + time.Now().Format("2006-01-02") + ".log",
+		MaxSize:    10,
+		MaxBackups: 30,
+		MaxAge:     7,
+		Compress:   true,
+	}
+
+	core := zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(logFile),
+		zap.InfoLevel,
+	)
+	logger := zap.New(core)
+	defer logger.Sync()
+
+	app.Use(fiberzap.New(fiberzap.Config{
+		Logger: logger,
+	}))
 	app.Static("/docs", "docs")
 	app.Get("/docs/*", swagger.New(swagger.Config{
 		URL: "/docs/swagger.json",

@@ -3,16 +3,18 @@ package main
 import (
 	"ayo-baca-buku/app/database"
 	"ayo-baca-buku/app/routes"
+	"ayo-baca-buku/app/util/logger"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/gofiber/contrib/fiberzap/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
+
+	gormLogger "gorm.io/gorm/logger"
 )
 
 // @title Ayo Baca Buku - API
@@ -25,34 +27,26 @@ import (
 // @host localhost:3000
 // @BasePath /
 func main() {
+	zLogger := logger.NewLogger()
+	defer zLogger.Sync()
+
 	DB, err := database.NewDatabase()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	dbLogger := &logger.GormLogger{
+		ZapLogger: zLogger,
+		LogLevel:  gormLogger.Info,
+	}
+	DB.Logger = dbLogger.LogMode(gormLogger.Info)
+
 	database.RunMigration(DB)
 	database.RunSeeder(DB)
 
 	app := fiber.New()
-
-	logFile := &lumberjack.Logger{
-		Filename:   "logs/app-" + time.Now().Format("2006-01-02") + ".log",
-		MaxSize:    10,
-		MaxBackups: 30,
-		MaxAge:     7,
-		Compress:   true,
-	}
-
-	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(logFile),
-		zap.InfoLevel,
-	)
-	logger := zap.New(core)
-	defer logger.Sync()
-
 	app.Use(fiberzap.New(fiberzap.Config{
-		Logger: logger,
+		Logger: zLogger,
 	}))
 	app.Static("/docs", "docs")
 	app.Get("/docs/*", swagger.New(swagger.Config{
@@ -85,5 +79,21 @@ func main() {
 
 	routes.SetupUserRoutes(app, DB)
 
-	app.Listen(": 3000")
+	go func() {
+		// Memberikan sedikit jeda untuk memastikan server sudah berjalan
+		time.Sleep(100 * time.Millisecond)
+		banner := `
+    _______ __             
+   / ____(_) /_  ___  _____
+  / /_  / / __ \/ _ \/ ___/
+ / __/ / / /_/ /  __/ /    
+/_/   /_/_.___/\___/_/`
+		fmt.Println(banner)
+		fmt.Println("\nPress Ctrl+C to shutdown server")
+	}()
+
+	if err := app.Listen(":3000"); err != nil {
+		zLogger.Error("Server failed to start", zap.Error(err))
+		os.Exit(1)
+	}
 }

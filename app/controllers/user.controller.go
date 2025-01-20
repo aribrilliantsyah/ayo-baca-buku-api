@@ -32,7 +32,7 @@ func (c *UserController) GetAllUsers(ctx *fiber.Ctx) error {
 
 	logger.Info("Fetching all users")
 	var users []*models.User
-	if err := c.DB.Debug().Find(&users).Error; err != nil {
+	if err := c.DB.Find(&users).Error; err != nil {
 		logger.Error("Failed to fetch users", zap.Error(err))
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to fetch users",

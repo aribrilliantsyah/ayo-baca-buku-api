@@ -13,8 +13,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"go.uber.org/zap"
-
-	gormLogger "gorm.io/gorm/logger"
 )
 
 // @title Ayo Baca Buku - API
@@ -30,16 +28,10 @@ func main() {
 	zLogger := logger.NewLogger()
 	defer zLogger.Sync()
 
-	DB, err := database.NewDatabase()
+	DB, err := database.NewDatabase(zLogger)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	dbLogger := &logger.GormLogger{
-		ZapLogger: zLogger,
-		LogLevel:  gormLogger.Info,
-	}
-	DB.Logger = dbLogger.LogMode(gormLogger.Info)
 
 	database.RunMigration(DB)
 	database.RunSeeder(DB)

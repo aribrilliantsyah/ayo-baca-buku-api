@@ -1,5 +1,28 @@
 basePath: /
 definitions:
+  app_controllers.LoginRequest:
+    properties:
+      password:
+        minLength: 6
+        type: string
+      username:
+        minLength: 3
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  app_controllers.LoginResponse:
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        type: object
+      message:
+        type: string
+      token:
+        type: string
+    type: object
   ayo-baca-buku_app_models.ReadingActivity:
     properties:
       created_at:
@@ -38,6 +61,8 @@ definitions:
       name:
         type: string
       token:
+        type: string
+      uid:
         type: string
       updated_at:
         type: string
@@ -99,8 +124,8 @@ definitions:
 host: localhost:3000
 info:
   contact:
-    email: fiber@swagger.io
-    name: API Support
+    email: ariardiansyah.study@gmail.com
+    name: Ari Ganteng
   description: Ini adalah API - Ayo Baca Buku
   license:
     name: Apache 2.0
@@ -108,6 +133,32 @@ info:
   title: Ayo Baca Buku - API
   version: "1.0"
 paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Login
+      parameters:
+      - description: Login Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/app_controllers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app_controllers.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app_controllers.LoginResponse'
+      summary: Login
+      tags:
+      - Login
   /users:
     get:
       consumes:

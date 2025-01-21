@@ -69,6 +69,7 @@ func main() {
 		return c.Type("html").Send([]byte(html))
 	})
 
+	routes.SetupAuthRoutes(app, DB)
 	routes.SetupUserRoutes(app, DB)
 
 	go func() {

@@ -8,6 +8,7 @@ import (
 
 type User struct {
 	ID        uint           `json:"id" gorm:"primarykey"`
+	UID       string         `json:"uid" gorm:"type:uuid;default:gen_random_uuid()"`
 	Name      string         `json:"name" gorm:"type:varchar(255);not null"`
 	Username  string         `json:"username" gorm:"type:varchar(100);uniqueIndex;not null"`
 	Email     string         `json:"email" gorm:"type:varchar(255);uniqueIndex;not null"`

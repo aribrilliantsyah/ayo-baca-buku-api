@@ -165,8 +165,14 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "created_by": {
+                    "type": "integer"
+                },
                 "deleted_at": {
                     "$ref": "#/definitions/gorm.DeletedAt"
+                },
+                "deleted_by": {
+                    "type": "integer"
                 },
                 "email": {
                     "type": "string"
@@ -185,6 +191,9 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "updated_by": {
+                    "type": "integer"
                 },
                 "user_books": {
                     "type": "array",

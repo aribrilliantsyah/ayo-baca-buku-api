@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"ayo-baca-buku/app/util/logger"
 	"errors"
 	"time"
 
@@ -11,24 +12,20 @@ import (
 )
 
 type TokenClaims struct {
-	UserID   int64  `json:"userid"`
+	UID      int64  `json:"uid"`
 	Username string `json:"username"`
 }
 
-var jwtKey []byte
+func GenerateToken(UID string, userName string) (string, error) {
+	logger := logger.GetLogger()
 
-// Initialize jwtKey from Viper configuration
-func InitJWT() error {
-	jwtKey = []byte(viper.GetString("JWT_SECRET"))
+	jwtKey := []byte(viper.GetString("JWT_SECRET"))
 	if len(jwtKey) == 0 {
-		return errors.New("JWT secret not found in configuration")
+		logger.Fatal("JWT_SECRET is not set")
 	}
-	return nil
-}
 
-func GenerateToken(userID int64, userName string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"userid":   userID,
+		"uid":      UID,
 		"username": userName,
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	})
@@ -41,6 +38,13 @@ func GenerateToken(userID int64, userName string) (string, error) {
 }
 
 func VerifyToken(tokenString string) (int64, error) {
+	logger := logger.GetLogger()
+
+	jwtKey := []byte(viper.GetString("JWT_SECRET"))
+	if len(jwtKey) == 0 {
+		logger.Fatal("JWT_SECRET is not set")
+	}
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
@@ -73,6 +77,13 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 func DecodeToken(tokenString string) (*TokenClaims, error) {
+	logger := logger.GetLogger()
+
+	jwtKey := []byte(viper.GetString("JWT_SECRET"))
+	if len(jwtKey) == 0 {
+		logger.Fatal("JWT_SECRET is not set")
+	}
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
@@ -82,10 +93,10 @@ func DecodeToken(tokenString string) (*TokenClaims, error) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userID := int64(claims["userid"].(float64))
+		uid := int64(claims["uid"].(float64))
 		username := claims["username"].(string)
 		return &TokenClaims{
-			UserID:   userID,
+			UID:      uid,
 			Username: username,
 		}, nil
 	}

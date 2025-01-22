@@ -5,8 +5,9 @@ import (
 )
 
 type AppConfig struct {
-	DB_SOURCE string `mapstructure:"DB_SOURCE"`
-	DB_DEBUG  bool   `mapstructure:"DB_DEBUG"`
+	DB_SOURCE  string `mapstructure:"DB_SOURCE"`
+	DB_DEBUG   bool   `mapstructure:"DB_DEBUG"`
+	JWT_SECRET string `mapstructure:"JWT_SECRET"`
 }
 
 func LoadAppConfig(path string) (config AppConfig, err error) {

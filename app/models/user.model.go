@@ -16,6 +16,9 @@ type User struct {
 	Password  string         `json:"-" gorm:"type:varchar(255);not null"`
 	UserBooks []UserBook     `json:"user_books" gorm:"foreignKey:UserID"`
 	CreatedAt time.Time      `json:"created_at"`
+	CreatedBy int64          `json:"created_by"`
 	UpdatedAt time.Time      `json:"updated_at"`
+	UpdatedBy int64          `json:"updated_by"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
+	DeletedBy int64          `json:"deleted_by"`
 }

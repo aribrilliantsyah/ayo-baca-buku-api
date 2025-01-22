@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"ayo-baca-buku/app/models"
+	"ayo-baca-buku/app/util/jwt"
 	"ayo-baca-buku/app/util/logger"
 	"strings"
 
@@ -71,7 +73,45 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		})
 	}
 
+	user := models.User{}
+	if err := c.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
+		logger.Error("User not found", zap.Error(err))
+		return ctx.Status(fiber.StatusNotFound).JSON(LoginResponse{
+			Message: "Invalid credentials (1)",
+		})
+	}
+
+	if user.DeletedBy != 0 {
+		logger.Error("User deleted")
+		return ctx.Status(fiber.StatusUnauthorized).JSON(LoginResponse{
+			Message: "User deleted (soft)",
+		})
+	}
+
+	if !jwt.CheckPasswordHash(req.Password, user.Password) {
+		logger.Error("Invalid password")
+		return ctx.Status(fiber.StatusUnauthorized).JSON(LoginResponse{
+			Message: "Invalid credentials (2)",
+		})
+	}
+
+	token, err := jwt.GenerateToken(user.UID, user.Username)
+	if err != nil {
+		logger.Error("Failed to generate token", zap.Error(err))
+		return ctx.Status(fiber.StatusInternalServerError).JSON(LoginResponse{
+			Message: "Failed to generate token",
+		})
+	}
+
+	if err := c.DB.Model(&user).Where("username = ?", user.Username).Update("token", token).Error; err != nil {
+		logger.Error("Failed to update token", zap.Error(err))
+		return ctx.Status(fiber.StatusInternalServerError).JSON(LoginResponse{
+			Message: "Failed to update token",
+		})
+	}
+
 	return ctx.Status(fiber.StatusOK).JSON(LoginResponse{
 		Message: "Success",
+		Token:   token,
 	})
 }

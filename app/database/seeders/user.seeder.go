@@ -22,6 +22,7 @@ func SeedUser(db *gorm.DB) {
 			Username:  "sampleuser",
 			Email:     "sampleuser@example.com",
 			Token:     "",
+			Role:      "admin",
 			Password:  password,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),

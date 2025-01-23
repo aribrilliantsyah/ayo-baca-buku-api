@@ -14,6 +14,7 @@ type User struct {
 	Email     string         `json:"email" gorm:"type:varchar(255);uniqueIndex;not null"`
 	Token     string         `json:"token" gorm:"type:varchar(255)"`
 	Password  string         `json:"-" gorm:"type:varchar(255);not null"`
+	Role      string         `json:"role" gorm:"type:varchar(255)"`
 	UserBooks []UserBook     `json:"user_books" gorm:"foreignKey:UserID"`
 	CreatedAt time.Time      `json:"created_at"`
 	CreatedBy int64          `json:"created_by"`

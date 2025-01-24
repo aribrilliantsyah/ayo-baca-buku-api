@@ -22,6 +22,9 @@ type UserBook struct {
 	ReadingActivities []ReadingActivity `json:"reading_activities" gorm:"foreignKey:UserBookID"`
 	User              User              `json:"user" gorm:"foreignKey:UserID"`
 	CreatedAt         time.Time         `json:"created_at"`
+	CreatedBy         int64             `json:"created_by"`
 	UpdatedAt         time.Time         `json:"updated_at"`
+	UpdatedBy         int64             `json:"updated_by"`
 	DeletedAt         gorm.DeletedAt    `json:"deleted_at" gorm:"index"`
+	DeletedBy         int64             `json:"deleted_by"`
 }

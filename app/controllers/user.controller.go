@@ -45,3 +45,23 @@ func (c *UserController) GetAllUsers(ctx *fiber.Ctx) error {
 		"data":    users,
 	})
 }
+
+func (c *UserController) GetUserById(ctx *fiber.Ctx) error {
+	return nil
+}
+
+func (c *UserController) CreateUser(ctx *fiber.Ctx) error {
+	return nil
+}
+
+func (c *UserController) UpdateUser(ctx *fiber.Ctx) error {
+	return nil
+}
+
+func (c *UserController) DeleteUser(ctx *fiber.Ctx) error {
+	return nil
+}
+
+func (c *UserController) SoftDeleteUser(ctx *fiber.Ctx) error {
+	return nil
+}

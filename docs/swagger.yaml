@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  app_controllers.LoginRequest:
+  controllers.LoginRequest:
     properties:
       password:
         minLength: 6
@@ -12,7 +12,7 @@ definitions:
     - password
     - username
     type: object
-  app_controllers.LoginResponse:
+  controllers.LoginResponse:
     properties:
       errors:
         additionalProperties:
@@ -23,15 +23,17 @@ definitions:
       token:
         type: string
     type: object
-  app_controllers.RegisterRequest:
+  controllers.RegisterRequest:
     properties:
       email:
         type: string
       name:
         type: string
       password:
+        minLength: 6
         type: string
       password_confirmation:
+        minLength: 6
         type: string
       username:
         type: string
@@ -42,10 +44,10 @@ definitions:
     - password_confirmation
     - username
     type: object
-  app_controllers.RegisterResponse:
+  controllers.RegisterResponse:
     properties:
       data:
-        $ref: '#/definitions/ayo-baca-buku_app_models.User'
+        $ref: '#/definitions/models.User'
       errors:
         additionalProperties:
           type: string
@@ -53,7 +55,18 @@ definitions:
       message:
         type: string
     type: object
-  ayo-baca-buku_app_models.ReadingActivity:
+  fiber.Map:
+    additionalProperties: true
+    type: object
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  models.ReadingActivity:
     properties:
       created_at:
         type: string
@@ -74,11 +87,11 @@ definitions:
       updated_at:
         type: string
       user_book:
-        $ref: '#/definitions/ayo-baca-buku_app_models.UserBook'
+        $ref: '#/definitions/models.UserBook'
       user_book_id:
         type: integer
     type: object
-  ayo-baca-buku_app_models.User:
+  models.User:
     properties:
       created_at:
         type: string
@@ -106,12 +119,12 @@ definitions:
         type: integer
       user_books:
         items:
-          $ref: '#/definitions/ayo-baca-buku_app_models.UserBook'
+          $ref: '#/definitions/models.UserBook'
         type: array
       username:
         type: string
     type: object
-  ayo-baca-buku_app_models.UserBook:
+  models.UserBook:
     properties:
       author:
         type: string
@@ -120,10 +133,14 @@ definitions:
         type: string
       created_at:
         type: string
+      created_by:
+        type: integer
       current_page:
         type: integer
       deleted_at:
         $ref: '#/definitions/gorm.DeletedAt'
+      deleted_by:
+        type: integer
       end_date:
         type: string
       id:
@@ -134,7 +151,7 @@ definitions:
         type: string
       reading_activities:
         items:
-          $ref: '#/definitions/ayo-baca-buku_app_models.ReadingActivity'
+          $ref: '#/definitions/models.ReadingActivity'
         type: array
       start_date:
         type: string
@@ -146,18 +163,60 @@ definitions:
         type: integer
       updated_at:
         type: string
+      updated_by:
+        type: integer
       user:
-        $ref: '#/definitions/ayo-baca-buku_app_models.User'
+        $ref: '#/definitions/models.User'
       user_id:
         type: integer
     type: object
-  gorm.DeletedAt:
+  models.UserCreateRequest:
     properties:
-      time:
+      email:
         type: string
-      valid:
-        description: Valid is true if Time is not NULL
-        type: boolean
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      password_confirmation:
+        minLength: 6
+        type: string
+      role:
+        description: Role is optional, defaults to 'user' if not provided or handled
+          in controller
+        enum:
+        - admin
+        - user
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    - password_confirmation
+    - username
+    type: object
+  models.UserUpdateRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      password_confirmation:
+        minLength: 6
+        type: string
+      role:
+        enum:
+        - admin
+        - user
+        type: string
+      username:
+        type: string
     type: object
 host: localhost:3000
 info:
@@ -182,18 +241,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/app_controllers.LoginRequest'
+          $ref: '#/definitions/controllers.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/app_controllers.LoginResponse'
+            $ref: '#/definitions/controllers.LoginResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/app_controllers.LoginResponse'
+            $ref: '#/definitions/controllers.LoginResponse'
       summary: Login
       tags:
       - Login
@@ -208,18 +267,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/app_controllers.RegisterRequest'
+          $ref: '#/definitions/controllers.RegisterRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/app_controllers.RegisterResponse'
+            $ref: '#/definitions/controllers.RegisterResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/app_controllers.RegisterResponse'
+            $ref: '#/definitions/controllers.RegisterResponse'
       summary: Register
       tags:
       - Register
@@ -234,8 +293,212 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ayo-baca-buku_app_models.User'
+            $ref: '#/definitions/models.User'
       summary: Get all users
+      tags:
+      - User
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with the input payload
+      parameters:
+      - description: User Create Payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  $ref: '#/definitions/models.User'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' errors':
+                  additionalProperties:
+                    type: string
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Create a new user
+      tags:
+      - User
+  /users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a single user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  $ref: '#/definitions/models.User'
+                message:
+                  type: string
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Get user by ID
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Update an existing user with the input payload
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User Update Payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  $ref: '#/definitions/models.User'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' errors':
+                  additionalProperties:
+                    type: string
+                  type: object
+                message:
+                  type: string
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Update an existing user
+      tags:
+      - User
+  /users/{id}/soft-delete:
+    patch:
+      consumes:
+      - application/json
+      description: Soft delete a user by their ID (sets DeletedAt and DeletedBy fields)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Soft delete a user
       tags:
       - User
 swagger: "2.0"

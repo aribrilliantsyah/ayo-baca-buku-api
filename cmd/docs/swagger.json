@@ -1,0 +1,19 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Ini adalah API - Ayo Baca Buku",
+        "title": "Ayo Baca Buku - API",
+        "contact": {
+            "name": "Ari Ganteng",
+            "email": "ariardiansyah.study@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:3000",
+    "basePath": "/",
+    "paths": {}
+}

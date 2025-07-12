@@ -23,3 +23,21 @@ type User struct {
 	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 	DeletedBy int64          `json:"deleted_by"`
 }
+
+type UserCreateRequest struct {
+	Name                 string `json:"name" validate:"required"`
+	Username             string `json:"username" validate:"required,alphanum,unique_username"`
+	Email                string `json:"email" validate:"required,email,unique_email"`
+	Password             string `json:"password" validate:"required,alphanum,min=6"`
+	PasswordConfirmation string `json:"password_confirmation" validate:"required,eqfield=Password,min=6"`
+	Role                 string `json:"role" validate:"omitempty,oneof=admin user"` // Role is optional, defaults to 'user' if not provided or handled in controller
+}
+
+type UserUpdateRequest struct {
+	Name                 string `json:"name" validate:"omitempty"`
+	Username             string `json:"username" validate:"omitempty,alphanum,unique_username"`
+	Email                string `json:"email" validate:"omitempty,email,unique_email"`
+	Password             string `json:"password" validate:"omitempty,alphanum,min=6"`
+	PasswordConfirmation string `json:"password_confirmation" validate:"omitempty,eqfield=Password,min=6"`
+	Role                 string `json:"role" validate:"omitempty,oneof=admin user"`
+}

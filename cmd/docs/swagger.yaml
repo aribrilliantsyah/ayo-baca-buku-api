@@ -1,0 +1,14 @@
+basePath: /
+host: localhost:3000
+info:
+  contact:
+    email: ariardiansyah.study@gmail.com
+    name: Ari Ganteng
+  description: Ini adalah API - Ayo Baca Buku
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Ayo Baca Buku - API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

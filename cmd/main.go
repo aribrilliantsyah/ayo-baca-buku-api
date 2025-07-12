@@ -71,6 +71,8 @@ func main() {
 
 	routes.SetupAuthRoutes(app, DB)
 	routes.SetupUserRoutes(app, DB)
+	routes.SetupUserBookRoutes(app, DB) // Added UserBook routes
+	routes.SetupReadingActivityRoutes(app, DB) // Added ReadingActivity routes
 
 	go func() {
 		// Memberikan sedikit jeda untuk memastikan server sudah berjalan

@@ -159,7 +159,7 @@ func (c *UserController) CreateUser(ctx *fiber.Ctx) error {
 	// For simplicity, returning the user object (excluding password).
 	user.Password = "" // Clear password before sending response
 
-	logger.Info("User created successfully", zap.Uint("userID", user.UID))
+	logger.Info("User created successfully", zap.Uint("userID", user.ID))
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "User created successfully",
 		"data":    user,
@@ -197,8 +197,8 @@ func (c *UserController) UpdateUser(ctx *fiber.Ctx) error {
 	// Initialize validator and register custom validations
 	validate := validator.New()
 	// Pass user.ID to ignore current user's email/username in unique checks
-	validate.RegisterValidation("unique_username", validation.UniqueUsername(c.DB, user.ID))
-	validate.RegisterValidation("unique_email", validation.UniqueEmail(c.DB, user.ID))
+	validate.RegisterValidation("unique_username", validation.UniqueUsername(c.DB, int64(user.ID)))
+	validate.RegisterValidation("unique_email", validation.UniqueEmail(c.DB, int64(user.ID)))
 
 	var req models.UserUpdateRequest // Assuming UserUpdateRequest is defined in models package
 	if err := ctx.BodyParser(&req); err != nil {
@@ -338,4 +338,63 @@ func (c *UserController) SoftDeleteUser(ctx *fiber.Ctx) error {
 
 	logger.Info("User soft deleted successfully", zap.String("userID", userID))
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "User soft deleted successfully"})
+}
+
+// GetDashboard godoc
+// @Summary Get user dashboard recap
+// @Description Get a recap of a user's reading activities
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} fiber.Map{message=string, data=models.DashboardResponse}
+// @Failure 404 {object} fiber.Map{message=string}
+// @Failure 500 {object} fiber.Map{message=string}
+// @Router /users/{id}/dashboard [get]
+func (c *UserController) GetDashboard(ctx *fiber.Ctx) error {
+	logger := logger.GetLogger()
+	userID := ctx.Params("id")
+	logger.Info("UserController.GetDashboard Begin", zap.String("userID", userID))
+
+	// 1. Check if user exists
+	var user models.User
+	if err := c.DB.First(&user, "id = ?", userID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			logger.Warn("User not found for dashboard", zap.String("userID", userID))
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "User not found"})
+		}
+		logger.Error("Failed to fetch user for dashboard", zap.Error(err), zap.String("userID",userID))
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to fetch user"})
+	}
+
+	var dashboardData models.DashboardResponse
+
+	// 2. Get total books being read
+	if err := c.DB.Model(&models.UserBook{}).Where("user_id = ? AND status = ?", userID, "reading").Count(&dashboardData.TotalBooksReading).Error; err != nil {
+		logger.Error("Failed to count reading books", zap.Error(err), zap.String("userID", userID))
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to calculate dashboard stats"})
+	}
+
+	// 3. Get total books finished
+	if err := c.DB.Model(&models.UserBook{}).Where("user_id = ? AND status = ?", userID, "finished").Count(&dashboardData.TotalBooksFinished).Error; err != nil {
+		logger.Error("Failed to count finished books", zap.Error(err), zap.String("userID", userID))
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to calculate dashboard stats"})
+	}
+
+	// 4. Get total pages read
+	// This requires a subquery to find all user_book_ids for the given user
+	if err := c.DB.Model(&models.ReadingActivity{}).
+		Joins("JOIN user_books ON user_books.id = reading_activities.user_book_id").
+		Where("user_books.user_id = ?", userID).
+		Select("COALESCE(SUM(reading_activities.pages_read), 0)"). // Use COALESCE to return 0 instead of NULL if no records
+		Row().Scan(&dashboardData.TotalPagesRead); err != nil {
+		logger.Error("Failed to sum total pages read", zap.Error(err), zap.String("userID", userID))
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed to calculate dashboard stats"})
+	}
+
+	logger.Info("Dashboard data fetched successfully", zap.String("userID", userID))
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "success",
+		"data":    dashboardData,
+	})
 }

@@ -66,6 +66,15 @@ definitions:
         description: Valid is true if Time is not NULL
         type: boolean
     type: object
+  models.DashboardResponse:
+    properties:
+      total_books_finished:
+        type: integer
+      total_books_reading:
+        type: integer
+      total_pages_read:
+        type: integer
+    type: object
   models.ReadingActivity:
     properties:
       created_at:
@@ -90,6 +99,44 @@ definitions:
         $ref: '#/definitions/models.UserBook'
       user_book_id:
         type: integer
+    type: object
+  models.ReadingActivityCreateRequest:
+    properties:
+      end_page:
+        type: integer
+      notes:
+        type: string
+      pages_read:
+        type: integer
+      reading_date:
+        type: string
+      start_page:
+        minimum: 0
+        type: integer
+      user_book_id:
+        type: integer
+    required:
+    - end_page
+    - pages_read
+    - reading_date
+    - start_page
+    - user_book_id
+    type: object
+  models.ReadingActivityUpdateRequest:
+    properties:
+      end_page:
+        type: integer
+      notes:
+        type: string
+      pages_read:
+        type: integer
+      reading_date:
+        type: string
+      start_page:
+        minimum: 0
+        type: integer
+    required:
+    - reading_date
     type: object
   models.User:
     properties:
@@ -169,6 +216,77 @@ definitions:
         $ref: '#/definitions/models.User'
       user_id:
         type: integer
+    type: object
+  models.UserBookCreateRequest:
+    properties:
+      author:
+        maxLength: 255
+        minLength: 1
+        type: string
+      cover:
+        maxLength: 255
+        type: string
+      motivation_read:
+        type: string
+      publisher:
+        maxLength: 255
+        type: string
+      start_date:
+        type: string
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
+      total_pages:
+        type: integer
+      user_id:
+        type: integer
+    required:
+    - author
+    - start_date
+    - title
+    - total_pages
+    - user_id
+    type: object
+  models.UserBookUpdateRequest:
+    properties:
+      author:
+        maxLength: 255
+        minLength: 1
+        type: string
+      cover:
+        maxLength: 255
+        type: string
+      current_page:
+        minimum: 0
+        type: integer
+      end_date:
+        description: omitempty is fine here. Consider *time.Time if clearing is needed
+          and zero value is significant.
+        type: string
+      motivation_read:
+        type: string
+      publisher:
+        maxLength: 255
+        type: string
+      start_date:
+        description: omitempty might not be ideal if you want to clear it, but for
+          time.Time zero value is tricky.
+        type: string
+      status:
+        enum:
+        - reading
+        - finished
+        type: string
+      title:
+        maxLength: 255
+        minLength: 1
+        type: string
+      total_pages:
+        description: Pointer to distinguish between 0 and not provided
+        type: integer
+    required:
+    - start_date
     type: object
   models.UserCreateRequest:
     properties:
@@ -256,6 +374,219 @@ paths:
       summary: Login
       tags:
       - Login
+  /reading-activities:
+    post:
+      consumes:
+      - application/json
+      description: Add a new reading activity for a user's book.
+      parameters:
+      - description: Reading Activity Create Payload
+        in: body
+        name: reading_activity
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReadingActivityCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  $ref: '#/definitions/models.ReadingActivity'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' errors':
+                  additionalProperties:
+                    type: string
+                  type: object
+                message:
+                  type: string
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Create a new reading activity
+      tags:
+      - ReadingActivity
+  /reading-activities/{activityId}:
+    delete:
+      consumes:
+      - application/json
+      description: Permanently delete a specific reading activity by its ID.
+      parameters:
+      - description: Reading Activity ID
+        in: path
+        name: activityId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "404":
+          description: ReadingActivity not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Delete a specific reading activity
+      tags:
+      - ReadingActivity
+    get:
+      consumes:
+      - application/json
+      description: Retrieve details of a specific reading activity by its ID.
+      parameters:
+      - description: Reading Activity ID
+        in: path
+        name: activityId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  $ref: '#/definitions/models.ReadingActivity'
+                message:
+                  type: string
+              type: object
+        "404":
+          description: ReadingActivity not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Get a specific reading activity by its ID
+      tags:
+      - ReadingActivity
+    put:
+      consumes:
+      - application/json
+      description: Update details of a specific reading activity by its ID.
+      parameters:
+      - description: Reading Activity ID
+        in: path
+        name: activityId
+        required: true
+        type: integer
+      - description: Reading Activity Update Payload
+        in: body
+        name: reading_activity_update
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReadingActivityUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  $ref: '#/definitions/models.ReadingActivity'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' errors':
+                  additionalProperties:
+                    type: string
+                  type: object
+                message:
+                  type: string
+              type: object
+        "404":
+          description: ReadingActivity not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Update a specific reading activity
+      tags:
+      - ReadingActivity
   /register:
     post:
       consumes:
@@ -282,6 +613,306 @@ paths:
       summary: Register
       tags:
       - Register
+  /userbooks:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all user books, optionally filtered by user_id.
+      parameters:
+      - description: Filter by User ID
+        in: query
+        name: user_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  items:
+                    $ref: '#/definitions/models.UserBook'
+                  type: array
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Get all user books
+      tags:
+      - UserBook
+    post:
+      consumes:
+      - application/json
+      description: Add a new book to a user's reading list.
+      parameters:
+      - description: User Book Create Payload
+        in: body
+        name: userbook
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserBookCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  $ref: '#/definitions/models.UserBook'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' errors':
+                  additionalProperties:
+                    type: string
+                  type: object
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Create a new user book entry
+      tags:
+      - UserBook
+  /userbooks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a user book by its ID.
+      parameters:
+      - description: UserBook ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Soft delete a user book
+      tags:
+      - UserBook
+    get:
+      consumes:
+      - application/json
+      description: Get details of a specific user book, including its owner and reading
+        activities.
+      parameters:
+      - description: UserBook ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  $ref: '#/definitions/models.UserBook'
+                message:
+                  type: string
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Get a user book by its ID
+      tags:
+      - UserBook
+    put:
+      consumes:
+      - application/json
+      description: Update details of an existing user book by its ID.
+      parameters:
+      - description: UserBook ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User Book Update Payload
+        in: body
+        name: userbook_update
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserBookUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  $ref: '#/definitions/models.UserBook'
+                message:
+                  type: string
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' errors':
+                  additionalProperties:
+                    type: string
+                  type: object
+                message:
+                  type: string
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Update an existing user book
+      tags:
+      - UserBook
+  /userbooks/{userBookId}/activities:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all reading activities associated with a given
+        UserBook ID.
+      parameters:
+      - description: UserBook ID
+        in: path
+        name: userBookId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  items:
+                    $ref: '#/definitions/models.ReadingActivity'
+                  type: array
+                message:
+                  type: string
+              type: object
+        "404":
+          description: UserBook not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Get all reading activities for a specific user book
+      tags:
+      - ReadingActivity
   /users:
     get:
       consumes:
@@ -455,6 +1086,52 @@ paths:
                   type: string
               type: object
       summary: Update an existing user
+      tags:
+      - User
+  /users/{id}/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Get a recap of a user's reading activities
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                ' data':
+                  $ref: '#/definitions/models.DashboardResponse'
+                message:
+                  type: string
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            allOf:
+            - $ref: '#/definitions/fiber.Map'
+            - properties:
+                message:
+                  type: string
+              type: object
+      summary: Get user dashboard recap
       tags:
       - User
   /users/{id}/soft-delete:

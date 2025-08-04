@@ -16,6 +16,7 @@ func SetupUserRoutes(app *fiber.App, DB *gorm.DB) {
 	userRoutes.Get("/", userController.GetAllUsers)
 	userRoutes.Post("/", userController.CreateUser) // Added CreateUser route
 	userRoutes.Get("/:id", userController.GetUserById) // Added GetUserById route
+	userRoutes.Get("/:id/dashboard", userController.GetDashboard)
 	userRoutes.Put("/:id", userController.UpdateUser) // Added UpdateUser route
 	userRoutes.Delete("/:id", userController.DeleteUser) // Added DeleteUser (hard delete) route
 	userRoutes.Patch("/:id/soft-delete", userController.SoftDeleteUser) // Added SoftDeleteUser route (using PATCH for partial update semantics)

@@ -1,0 +1,9 @@
+
+2025/08/04 04:02:57 [35m/app/app/database/database.go:24
+[0m[31m[error] [0mfailed to initialize database, got error failed to connect to `user=postgres database=postgres`:
+	127.0.0.1:5432 (localhost): dial error: dial tcp 127.0.0.1:5432: connect: connection refused
+	[::1]:5432 (localhost): dial error: dial tcp [::1]:5432: socket: address family not supported by protocol
+2025/08/04 04:02:57 failed to connect to `user=postgres database=postgres`:
+	127.0.0.1:5432 (localhost): dial error: dial tcp 127.0.0.1:5432: connect: connection refused
+	[::1]:5432 (localhost): dial error: dial tcp [::1]:5432: socket: address family not supported by protocol
+exit status 1
